@@ -1,5 +1,7 @@
 import psycopg2
 
+# handles database manipulation operations 
+
 DATABASE_URL = (
     "postgresql://neondb_owner:npg_M5sVheSzQLv4@"
     "ep-shrill-tree-a819xf7v-pooler.eastus2.azure.neon.tech/"
@@ -10,13 +12,13 @@ def _get_conn():
     return psycopg2.connect(DATABASE_URL)
 
 
-def insert_flower(name, color, price):
+def insert_flower(name, last_watered, water_level, min_water_required):
     conn = _get_conn()
     cur = conn.cursor()
     try:
         sql = f"""
-            INSERT INTO Flower (name, color, price)
-            VALUES ('{name}', '{color}', {price});
+            INSERT INTO team4_flowers (name, last_watered, water_level, min_water_required)
+            VALUES ('{name}', '{last_watered}', {water_level}, {min_water_required});
         """
         cur.execute(sql)
         conn.commit()
@@ -36,8 +38,8 @@ def select_flower(flower_id=None):
     try:
         if flower_id is None:
             sql = """
-                SELECT flower_id, name, color, price
-                FROM Flower
+                SELECT flower_id, name, last_watered, water_level, min_water_required
+                FROM team4_flowers
                 ORDER BY flower_id;
             """
             cur.execute(sql)
@@ -46,15 +48,16 @@ def select_flower(flower_id=None):
                 {
                     "flower_id": r[0],
                     "name": r[1],
-                    "color": r[2],
-                    "price": r[3],
+                    "last_watered": r[2],
+                    "water_level": r[3],
+                    "min_water_required": r[4],
                 }
                 for r in rows
             ]
         else:
             sql = f"""
-                SELECT flower_id, name, color, price
-                FROM Flower
+                SELECT flower_id, name, last_watered, water_level, min_water_required
+                FROM team4_flowers
                 WHERE flower_id = {flower_id};
             """
             cur.execute(sql)
@@ -64,23 +67,25 @@ def select_flower(flower_id=None):
             return {
                 "flower_id": row[0],
                 "name": row[1],
-                "color": row[2],
-                "price": row[3],
+                "last_watered": row[2],
+                "water_level": row[3],
+                "min_water_required": row[4],
             }
     finally:
         cur.close()
         conn.close()
 
 
-def update_flower(flower_id, name, color, price):
+def update_flower(flower_id, name, last_watered, water_level, min_water_required):
     conn = _get_conn()
     cur = conn.cursor()
     try:
         sql = f"""
-            UPDATE Flower
+            UPDATE team4_flowers
             SET name = '{name}',
-                color = '{color}',
-                price = {price}
+                last_watered = '{last_watered}',
+                water_level = {water_level},
+                min_water_required = {min_water_required}
             WHERE flower_id = {flower_id};
         """
         cur.execute(sql)
@@ -100,7 +105,7 @@ def delete_flower(flower_id):
     cur = conn.cursor()
     try:
         sql = f"""
-            DELETE FROM Flower
+            DELETE FROM team4_flowers
             WHERE flower_id = {flower_id};
         """
         cur.execute(sql)
@@ -113,3 +118,16 @@ def delete_flower(flower_id):
     finally:
         cur.close()
         conn.close()
+
+def update_water_level(): # this is not the right algorithm yet...
+    conn = _get_conn()
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE team4_flowers
+        SET water_level = water_level - (5 * (CURRENT_DATE - last_watered));
+    """)
+
+    conn.commit()
+    cur.close()
+    conn.close()
