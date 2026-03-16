@@ -1,39 +1,61 @@
 import psycopg2
 import backend
 from flask import Flask, request, jsonify
+from flask import redirect, url_for
+#NEW: added water() function
+#NEW: added DATABASE_URL and get_db_connection()
+#NEW: import flask.redict and flask.url_for because it is used for water()
 
-app = Flask(__name__)
-
-#Automatically update water_level on refresh is last_watered == CURRENT_DATE ?
-#It will be an update with conditions?.
-
-#NEW:ADDED this incase it was needed. 
 # Database connection details
 DATABASE_URL = (
     "postgresql://neondb_owner:npg_M5sVheSzQLv4@"
     "ep-shrill-tree-a819xf7v-pooler.eastus2.azure.neon.tech/"
     "neondb?sslmode=require"
 )
-#NEW:ADDED connection to get_db_connection()
 def get_db_connection():
     return psycopg2.connect(DATABASE_URL)
 
+app = Flask(__name__)
+
+
+#Starting page 
+@app.route('/')
+def test_home():
+    return "Flower Watering App"
+
+#Column page for testing our column labels. #WE NEEDED TO USE `flower_id` the entire time!!!! not `id`
+@app.route('/column-name')
+def get_columns():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("""
+    SELECT column_name
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'team8_flowers';
+    """)
+    flowers = cur.fetchall()
+    cur.close()
+    conn.close()
+    return flowers
+#==============SQL QUERIES==============
 
 # Get all flowers
 @app.route('/team8_flowers', methods=['GET'])
 def get_flowers():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT id, name, lastwatered, water_level, min_water_required FROM team8_flowers")
+    cur.execute("SELECT flower_id, name, last_watered, water_level, min_water_required FROM team8_flowers") #FIXED: Changed `id` --> `flower_id`
     flowers = cur.fetchall()
     cur.close()
     conn.close()
     
     return jsonify([{
-        "id": f[0], "name": f[1], "last_watered": f[2].strftime("%Y-%m-%d"),
+        "flower_id": f[0], "name": f[1], "last_watered": f[2].strftime("%Y-%m-%d"),
         "water_level": f[3], "needs_watering": f[3] < f[4]
     } for f in flowers])
 
+#Get flowers needing water
 @app.route('/team8_flowers/needs_water', methods=['GET'])
 def get_flowers_needing_water():
     conn = get_db_connection()
@@ -85,8 +107,11 @@ def delete_flower(id):
     conn.close()
     return jsonify({"message": "Flower deleted successfully!"})  
 
-#NEW: Added water
-@app.route("/team8_flowers/water/<int:id>", methods=["POST"])
+#NEW: Water 
+@app.route("/team8_flowers/water/<int:id>", methods=["POST"])  #Should this be <int:flower_id> ?
 def water(flower_id):
     backend.water_flower(flower_id)
     return redirect(url_for("frontend.index"))
+
+if __name__ == "__main__":
+    app.run(debug=True, port=3000, host="0.0.0.0")
