@@ -7,13 +7,17 @@ app = Flask(__name__)
 #Automatically update water_level on refresh is last_watered == CURRENT_DATE ?
 #It will be an update with conditions?.
 
-#ADDED this incase it was needed. 
+#NEW:ADDED this incase it was needed. 
 # Database connection details
 DATABASE_URL = (
     "postgresql://neondb_owner:npg_M5sVheSzQLv4@"
     "ep-shrill-tree-a819xf7v-pooler.eastus2.azure.neon.tech/"
     "neondb?sslmode=require"
 )
+#NEW:ADDED connection to get_db_connection()
+def get_db_connection():
+    return psycopg2.connect(DATABASE_URL)
+
 
 # Get all flowers
 @app.route('/team8_flowers', methods=['GET'])
