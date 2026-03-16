@@ -1,1 +1,1 @@
-Group: Brandon Lo, Jodie Shinsato, Rei Thao
+Group 11 members: Brandon Lo, Jodie Shinsato, Rei Thao
