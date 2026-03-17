@@ -10,6 +10,9 @@ DATABASE_URL = (
     "neondb?sslmode=require"
 )
 
+def get_db_connection():
+    return psycopg2.connect(DATABASE_URL)
+
 # Get all flowers
 @app.route('/flowers', methods=['GET'])
 def get_flowers():
