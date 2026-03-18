@@ -13,7 +13,7 @@ def init_db():
     conn = _get_conn()
     cur = conn.cursor()
     cur.execute("""
-     CREATE TABLE team1_flowers (
+     CREATE TABLE IF NOT EXISTS team1_flowers (
         id SERIAL PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
         last_watered DATE NOT NULL,
@@ -28,8 +28,10 @@ def init_db():
 def seed_data():
     conn = _get_conn()
     cur = conn.cursor()
+
     cur.execute("SELECT COUNT(*) FROM team1_flowers;")
     count = cur.fetchone()[0]
+    
     if count == 0:
      cur.execute("""
         INSERT INTO team1_flowers(name, last_watered, water_level, min_water_required)
