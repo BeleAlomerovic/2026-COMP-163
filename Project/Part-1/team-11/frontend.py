@@ -28,8 +28,9 @@ PAGE = """
     <form method="POST" action="{{ url_for('frontend.add') }}">
       <div class="row">
         <label>Name<br><input name="name" required></label>
-        <label>Color<br><input name="color" placeholder="Mixed"></label>
-        <label>Price<br><input name="price" type="number" step="0.01" min="0" required></label>
+        <label>Last Watered<br><input name="last_watered" placeholder="Mixed"></label>
+        <label>Water Level<br><input name="water_level" type="number" step="0.01" min="0" required></label>
+        <label>Required Level<br><input name="water_level" type="number" step="0.01" min="0" required></label>
         <div style="align-self:end;"><button type="submit">Add</button></div>
       </div>
     </form>
@@ -41,8 +42,9 @@ PAGE = """
     <form method="POST" action="{{ url_for('frontend.edit', id=edit_item.id) }}">
       <div class="row">
         <label>Name<br><input name="name" value="{{ edit_item.name }}" required></label>
-        <label>Color<br><input name="color" value="{{ edit_item.color }}" required></label>
-        <label>Price<br><input name="price" type="number" step="0.01" min="0" value="{{ edit_item.price }}" required></label>
+        <label>Last Watered<br><input name="last_watered" placeholder="Mixed"></label>
+        <label>Water Level<br><input name="water_level" type="number" step="0.01" min="0" required></label>
+        <label>Required Level<br><input name="water_level" type="number" step="0.01" min="0" required></label>
         <div style="align-self:end;">
           <button type="submit">Save</button>
           <a href="{{ url_for('frontend.index') }}" style="margin-left:10px;">Cancel</a>
@@ -55,7 +57,7 @@ PAGE = """
   <table>
     <thead>
       <tr>
-        <th>ID</th><th>Name</th><th>Color</th><th>Price</th><th>Water Level</th><th>Required Level</th><th>Actions</th>
+        <th>ID</th><th>Name</th><th>Last Watered</th><th>Water Level</th><th>Required Level</th><th>Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -63,8 +65,7 @@ PAGE = """
       <tr>
         <td>{{ r.id }}</td>
         <td>{{ r.name }}</td>
-        <td>{{ r.color }}</td>
-        <td>{{ r.price }}</td>
+        <td>{{ r.last_watered }}</td>
         <td>{{ r.water_level }}</td>
         <td>{{ r.min_water_required }}</td>
         <td>

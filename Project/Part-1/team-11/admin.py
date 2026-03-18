@@ -17,8 +17,6 @@ def init_db():
         CREATE TABLE IF NOT EXISTS team11_flowers (
             id SERIAL PRIMARY KEY,
             name VARCHAR(100) NOT NULL,
-            color VARCHAR(100) DEFAULT 'mixed',
-            price DECIMAL, 
             last_watered DATE NOT NULL,
             water_level INT NOT NULL,
             min_water_required INT NOT NULL
