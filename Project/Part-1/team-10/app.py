@@ -4,13 +4,21 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 # Database connection details
+DATABASE_URL = (
+    "postgresql://neondb_owner:npg_M5sVheSzQLv4@"
+    "ep-shrill-tree-a819xf7v-pooler.eastus2.azure.neon.tech/"
+    "neondb?sslmode=require"
+)
+
+def get_db_connection():
+    return psycopg2.connect(DATABASE_URL)
 
 # Get all flowers
 @app.route('/flowers', methods=['GET'])
 def get_flowers():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("WRITE CORRECT QUERY HERE")  # Placeholder for SELECT query
+    cur.execute("SELECT * FROM team10_flower;")  # Placeholder for SELECT query
     flowers = cur.fetchall()
     cur.close()
     conn.close()
@@ -24,7 +32,7 @@ def get_flowers():
 def get_flowers_needing_water():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("WRITE CORRECT QUERY HERE")  # Placeholder for SELECT query
+    cur.execute("SELECT * FROM team10_flower WHERE water_level < min_water_required;")  # Placeholder for SELECT query
     flowers = cur.fetchall()
     cur.close()
     conn.close()
@@ -40,7 +48,7 @@ def add_flower():
     data = request.json
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("WRITE CORRECT QUERY HERE", 
+    cur.execute("INSERT INTO team10_flowers (name, last_watered, water_level, min_water_required) VALUES (%s, %s, %s, %s);", 
                 (data['name'], data['last_watered'], data['water_level'], data['min_water_required']))  # Placeholder
     conn.commit()
     cur.close()
@@ -53,7 +61,7 @@ def update_flower(id):
     data = request.json
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("WRITE CORRECT QUERY HERE", 
+    cur.execute("UPDATE team10_flowers SET last_watered = %s, water_level = %s WHERE id = %s;", 
                 (data['last_watered'], data['water_level'], id))  # Placeholder
     conn.commit()
     cur.close()
@@ -65,7 +73,7 @@ def update_flower(id):
 def delete_flower(id):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("WRITE CORRECT QUERY HERE", (id,))  # Placeholder
+    cur.execute("DELETE FROM team10_flowers WHERE id = %s;", (id,))  # Placeholder
     conn.commit()
     cur.close()
     conn.close()
