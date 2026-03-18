@@ -18,9 +18,7 @@ def apply_watering_loss():
         SET water_level = GREATEST(
             0,
             water_level - (5 * (CURRENT_DATE - last_watered))
-        ),
-        last_watered = CURRENT_DATE
-        WHERE last_watered < CURRENT_DATE;
+        );
     """)
     conn.commit()
     cur.close()
