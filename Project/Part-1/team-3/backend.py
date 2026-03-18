@@ -1,4 +1,5 @@
 import psycopg2
+from datetime import date
 
 DATABASE_URL = (
     "postgresql://neondb_owner:npg_M5sVheSzQLv4@"
@@ -9,16 +10,16 @@ DATABASE_URL = (
 def _get_conn():
     return psycopg2.connect(DATABASE_URL)
 
-
-def insert_flower(name, color, price):
+def insert_flower(name, water_level=20, min_water_required=5):
+    """Insert a new flower with default water level and minimum required"""
     conn = _get_conn()
     cur = conn.cursor()
     try:
-        sql = f"""
-            INSERT INTO Flower (name, color, price)
-            VALUES ('{name}', '{color}', {price});
+        sql = """
+            INSERT INTO team3_flowers (name, last_watered, water_level, min_water_required)
+            VALUES (%s, %s, %s, %s);
         """
-        cur.execute(sql)
+        cur.execute(sql, (name, date.today(), water_level, min_water_required))
         conn.commit()
         return True
     except Exception as e:
@@ -29,61 +30,63 @@ def insert_flower(name, color, price):
         cur.close()
         conn.close()
 
-
-def select_flower(flower_id=None):
+def select_flower(id=None):
+    """Get one or all flowers"""
     conn = _get_conn()
     cur = conn.cursor()
     try:
-        if flower_id is None:
+        if id is None:
             sql = """
-                SELECT flower_id, name, color, price
-                FROM Flower
-                ORDER BY flower_id;
+                SELECT id, name, last_watered, water_level, min_water_required
+                FROM team3_flowers
+                ORDER BY id;
             """
             cur.execute(sql)
             rows = cur.fetchall()
             return [
                 {
-                    "flower_id": r[0],
+                    "id": r[0],
                     "name": r[1],
-                    "color": r[2],
-                    "price": r[3],
+                    "last_watered": r[2],
+                    "water_level": r[3],
+                    "min_water_required": r[4],
                 }
                 for r in rows
             ]
         else:
-            sql = f"""
-                SELECT flower_id, name, color, price
-                FROM Flower
-                WHERE flower_id = {flower_id};
+            sql = """
+                SELECT id, name, last_watered, water_level, min_water_required
+                FROM team3_flowers
+                WHERE id = %s;
             """
-            cur.execute(sql)
+            cur.execute(sql, (id,))
             row = cur.fetchone()
             if not row:
                 return None
             return {
-                "flower_id": row[0],
+                "id": row[0],
                 "name": row[1],
-                "color": row[2],
-                "price": row[3],
+                "last_watered": row[2],
+                "water_level": row[3],
+                "min_water_required": row[4],
             }
     finally:
         cur.close()
         conn.close()
 
-
-def update_flower(flower_id, name, color, price):
+def update_flower(id, name, water_level=None, min_water_required=None):
+    """Update flower details"""
     conn = _get_conn()
     cur = conn.cursor()
     try:
-        sql = f"""
-            UPDATE Flower
-            SET name = '{name}',
-                color = '{color}',
-                price = {price}
-            WHERE flower_id = {flower_id};
+        sql = """
+            UPDATE team3_flowers
+            SET name = %s,
+                water_level = %s,
+                min_water_required = %s
+            WHERE id = %s;
         """
-        cur.execute(sql)
+        cur.execute(sql, (name, water_level, min_water_required, id))
         conn.commit()
         return True
     except Exception as e:
@@ -94,16 +97,65 @@ def update_flower(flower_id, name, color, price):
         cur.close()
         conn.close()
 
-
-def delete_flower(flower_id):
+def water_flower(id, amount=10):
+    """Add water to a flower and update last_watered timestamp"""
     conn = _get_conn()
     cur = conn.cursor()
     try:
-        sql = f"""
-            DELETE FROM Flower
-            WHERE flower_id = {flower_id};
+        sql = """
+            UPDATE team3_flowers
+            SET water_level = COALESCE(water_level, 0) + %s,
+                last_watered = %s
+            WHERE id = %s;
+        """
+        cur.execute(sql, (amount, date.today(), id))
+        conn.commit()
+        return True
+    except Exception as e:
+        conn.rollback()
+        print("Water error:", e)
+        return False
+    finally:
+        cur.close()
+        conn.close()
+
+def get_flowers_needing_water():
+    """Get all flowers where water_level is below min_water_required"""
+    conn = _get_conn()
+    cur = conn.cursor()
+    try:
+        sql = """
+            SELECT id, name, last_watered, water_level, min_water_required
+            FROM team3_flowers
+            WHERE water_level < min_water_required
+            ORDER BY water_level ASC;
         """
         cur.execute(sql)
+        rows = cur.fetchall()
+        return [
+            {
+                "id": r[0],
+                "name": r[1],
+                "last_watered": r[2],
+                "water_level": r[3],
+                "min_water_required": r[4],
+            }
+            for r in rows
+        ]
+    finally:
+        cur.close()
+        conn.close()
+
+def delete_flower(id):
+    """Delete a flower by ID"""
+    conn = _get_conn()
+    cur = conn.cursor()
+    try:
+        sql = """
+            DELETE FROM team3_flowers
+            WHERE id = %s;
+        """
+        cur.execute(sql, (id,))
         conn.commit()
         return True
     except Exception as e:
