@@ -37,6 +37,8 @@ def select_flower(id=None):
     try:
         if id is None:
             sql = """
+                UPDATE team3_flowers
+                SET water_level = water_level - (5 * (CURRENT_DATE - last_watered));
                 SELECT id, name, last_watered, water_level, min_water_required
                 FROM team3_flowers
                 ORDER BY id;

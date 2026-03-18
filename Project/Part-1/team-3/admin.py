@@ -13,12 +13,15 @@ def init_db():
     conn = _get_conn()
     cur = conn.cursor()
     cur.execute("""
+        DROP TABLE IF EXISTS team3_flowers;
         CREATE TABLE IF NOT EXISTS team3_flowers (
             id SERIAL PRIMARY KEY,
             name VARCHAR(100) NOT NULL UNIQUE,
             last_watered DATE NOT NULL,
             water_level INT NOT NULL,
-            min_water_required INT NOT NULL
+            min_water_required INT NOT NULL,
+            color VARCHAR(50) DEFAULT 'Mixed',
+            price NUMERIC(10, 2) DEFAULT 0.00
         );
     """)
     conn.commit()
