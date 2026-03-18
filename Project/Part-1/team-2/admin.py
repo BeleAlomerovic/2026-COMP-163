@@ -29,7 +29,7 @@ def seed_data():
     conn = _get_conn()
     cur = conn.cursor()
     cur.execute("""
-        INSERT INTO teamX_flowers (name, last_watered, water_level, min_water_required) 
+        INSERT INTO team2_flowers (name, last_watered, water_level, min_water_required) 
 VALUES 
 ('Rose', '2024-02-10', 20, 5),
 ('Tulip', '2024-02-08', 10, 7),
