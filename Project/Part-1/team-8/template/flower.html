@@ -54,7 +54,23 @@ Needs delete button
             .then(data => {
                 let rows = "";
                 data.forEach(flower => {
-                    rows += `<tr>
+                    let water = Number(flower.water_level);
+                    let min = Number(flower.min_water_required);
+                    let diff = water-min;
+                    let borderColor = "black";
+                    let bgColor = "white";
+                    if (water < min) {
+                        borderColor = "red";
+                        bgColor = "#ffcccc";
+                    } else if (diff <= 5) {
+                        borderColor = "yellow";
+                        bgColor = "#fff3cd";
+                    } else {
+                        borderColor = "green";
+                        bgColor = "#d4edda";
+                    }
+
+                    rows += `<tr style="border: 3px solid ${borderColor}; background-color: ${bgColor};">
                         <td>${flower.name}</td>
                         <td>${flower.last_watered}</td>
                         <td>${flower.water_level} inches</td>
