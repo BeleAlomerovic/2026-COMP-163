@@ -34,7 +34,7 @@ def seed_data():
         VALUES 
             ('Rose', '2024-02-10', 20, 5),
             ('Tulip', '2024-02-08', 10, 7),
-            ('Lily', '2024-02-05', 3, 5);
+            ('Lily', '2026-03-17', 3, 5);
     """)
     conn.commit()
     cur.close()

@@ -1,4 +1,5 @@
 import psycopg2
+from datetime import date
 
 DATABASE_URL = (
     "postgresql://neondb_owner:npg_M5sVheSzQLv4@"
@@ -35,14 +36,22 @@ def select_flower(id=None):
     cur = conn.cursor()
     try:
         if id is None:
-            sql = """
+            update_sql = """
                 UPDATE team11_flowers
-                SET water_level = water_level - (5 * (CURRENT_DATE - last_watered));
+                SET water_level = GREATEST(
+                    0,
+                    water_level - (5 * (%s::date - last_watered))
+            );
+            """
+            cur.execute(update_sql, (date.today(),))
+            conn.commit()
+
+            select_sql = """
                 SELECT id, name, last_watered, water_level, min_water_required
                 FROM team11_flowers
                 ORDER BY id;
             """
-            cur.execute(sql)
+            cur.execute(select_sql)
             rows = cur.fetchall()
             return [
                 {
@@ -125,7 +134,7 @@ def water_flower(id):
     try:
         sql = f"""
             UPDATE team11_flowers
-            SET water_level = min_water_required,
+            SET water_level = water_level + min_water_required,
                 last_watered = CURRENT_DATE
             WHERE id = {id};
         """
