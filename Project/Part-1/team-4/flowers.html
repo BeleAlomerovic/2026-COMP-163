@@ -84,8 +84,18 @@
         }
 
         function waterFlower(id) {
-            fetch(`/flowers/${id}/water`, {
-                method: 'PUT'
+            const newLevel = prompt("Enter new water level:");
+            const today = new Date().toISOString().split("T")[0]; // get current date in YYYY-MM-DD format
+            if (newLevel === null) return; // user cancelled
+
+            fetch(`/flowers/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    last_watered: today,
+                    water_level: parseInt(newLevel) })
             })
             .then(() => location.reload())
         }

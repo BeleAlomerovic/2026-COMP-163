@@ -77,7 +77,7 @@ def update_flower(id):
     cur = conn.cursor()
     # cur.execute("WRITE CORRECT QUERY HERE", 
     #             (data['last_watered'], data['water_level'], id))  # Placeholder
-    cur.execute("UPDATE team4_flowers SET last_watered = %s, water_level = %s WHERE flower_id = %s;", 
+    cur.execute("UPDATE team4_flowers SET last_watered = %s, water_level = water_level + %s WHERE flower_id = %s;", 
                 (data['last_watered'], data['water_level'], id))  
     conn.commit()
     cur.close()
