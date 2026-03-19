@@ -1,18 +1,15 @@
 from flask import Flask, request, jsonify
+
 import admin
-from frontend import frontend_bp
 import backend
 
-def create_app():
-    app = Flask(__name__)
 
-    admin.init_db()
-    admin.seed_data()
+app = Flask(__name__)
 
-    app.register_blueprint(frontend_bp)
-    return app
+# Initialize DB schema + seed sample rows (as required by the template).
+admin.init_db()
+admin.seed_data()
 
-app = create_app()
 
 @app.route("/flowers", methods=["GET"])
 def get_flowers():
@@ -42,6 +39,7 @@ def add_flower():
     )
     if new_id is None:
         return jsonify({"message": "Flower added failed"}), 400
+
     return jsonify({"message": "Flower added successfully!", "id": new_id}), 201
 
 
@@ -60,6 +58,7 @@ def update_flower(id):
     )
     if not ok:
         return jsonify({"message": "Flower not found"}), 404
+
     return jsonify({"message": "Flower updated successfully!"})
 
 
@@ -68,7 +67,11 @@ def delete_flower(id):
     ok = backend.delete_flower_api(id=id)
     if not ok:
         return jsonify({"message": "Flower not found"}), 404
+
     return jsonify({"message": "Flower deleted successfully!"})
 
+
 if __name__ == "__main__":
+    # Run on 5001 to match the assignment’s typical setup.
     app.run(host="127.0.0.1", port=5001, debug=True)
+

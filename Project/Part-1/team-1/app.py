@@ -1,5 +1,5 @@
 import psycopg2
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 
 app = Flask(__name__)
 
@@ -13,33 +13,46 @@ DATABASE_URL = (
 def get_db_connection():
     return psycopg2.connect(DATABASE_URL)
 
+@app.route('/')
+def home():
+    return render_template('flowers.html')
+
 # Get all flowers
 @app.route('/flowers', methods=['GET'])
 def get_flowers():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM team11_flowers;")  # Placeholder for SELECT query
+    cur.execute("SELECT * FROM team1_flowers")
     flowers = cur.fetchall()
     cur.close()
     conn.close()
     
     return jsonify([{
-        "id": f[0], "name": f[1], "last_watered": f[2].strftime("%Y-%m-%d"),
-        "water_level": f[3], "needs_watering": f[3] < f[4]
+        "id": f[0],
+        "name": f[1],
+        "last_watered": f[2].strftime("%Y-%m-%d"),
+        "water_level": f[3],
+        "needs_watering": f[3] < f[4]
     } for f in flowers])
 
 @app.route('/flowers/needs_watering', methods=['GET'])
 def get_flowers_needing_water():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM team11_flowers WHERE water_level < min_water_required")  # Placeholder for SELECT query
+    cur.execute("""
+        SELECT * FROM team1_flowers
+        WHERE water_level < min_water_required
+    """)
     flowers = cur.fetchall()
     cur.close()
     conn.close()
 
     return jsonify([{
-        "id": f[0], "name": f[1], "last_watered": f[2].strftime("%Y-%m-%d"),
-        "water_level": f[3], "needs_watering": f[3] < f[4]
+        "id": f[0],
+        "name": f[1],
+        "last_watered": f[2].strftime("%Y-%m-%d"),
+        "water_level": f[3],
+        "needs_watering": f[3] < f[4]
     } for f in flowers])
 
 # Add a flower
@@ -49,10 +62,9 @@ def add_flower():
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("""
-                INSERT INTO team11_flowers (name, last_watered, water_level, min_water_required)
-                VALUES (%s, %s, %s, %s);
-                """, 
-                (data['name'], data['last_watered'], data['water_level'], data['min_water_required']))  # Placeholder
+        INSERT INTO team1_flowers (name, last_watered, water_level, min_water_required)
+        VALUES (%s, %s, %s, %s)
+    """, (data['name'], data['last_watered'], data['water_level'], data['min_water_required']))
     conn.commit()
     cur.close()
     conn.close()
@@ -65,12 +77,10 @@ def update_flower(id):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("""
-                UPDATE team11_flowers
-                SET last_watered = %s,
-                water_level = %s
-                WHERE id = %s;
-                """, 
-                (data['last_watered'], data['water_level'], id))  # Placeholder
+        UPDATE team1_flowers
+        SET last_watered = %s, water_level = %s
+        WHERE id = %s
+    """, (data['last_watered'], data['water_level'], id))
     conn.commit()
     cur.close()
     conn.close()
@@ -81,8 +91,11 @@ def update_flower(id):
 def delete_flower(id):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("DELETE FROM team11_flowers WHERE id = %s;", (id,))  # Placeholder
+    cur.execute("DELETE FROM team1_flowers WHERE id = %s", (id,))
     conn.commit()
     cur.close()
     conn.close()
     return jsonify({"message": "Flower deleted successfully!"})
+
+if __name__ == '__main__':
+    app.run(debug=True)

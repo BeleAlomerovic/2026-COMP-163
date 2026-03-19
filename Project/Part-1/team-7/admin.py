@@ -13,7 +13,7 @@ def init_db():
     conn = _get_conn()
     cur = conn.cursor()
     cur.execute("""
-        CREATE TABLE team7_flowers (
+        CREATE TABLE IF NOT EXISTS team7_flowers (
             id SERIAL PRIMARY KEY,
             name VARCHAR(100) NOT NULL,
             last_watered DATE NOT NULL,

@@ -14,11 +14,10 @@ def insert_flower(name, last_watered, water_level, min_water_required):
     conn = _get_conn()
     cur = conn.cursor()
     try:
-        sql = f"""
-            INSERT INTO team11_flowers (name, last_watered, water_level, min_water_required)
-            VALUES ('{name}', '{last_watered}', {water_level}, {min_water_required});
-        """
-        cur.execute(sql)
+        cur.execute("""
+            INSERT INTO team10_flowers (name, last_watered, water_level, min_water_required)
+            VALUES (%s, %s, %s, %s);
+        """, (name, last_watered, water_level, min_water_required))
         conn.commit()
         return True
     except Exception as e:
@@ -35,60 +34,54 @@ def select_flower(id=None):
     cur = conn.cursor()
     try:
         if id is None:
-            sql = """
-                UPDATE team11_flowers
-                SET water_level = water_level - (5 * (CURRENT_DATE - last_watered));
+            cur.execute("""
                 SELECT id, name, last_watered, water_level, min_water_required
-                FROM team11_flowers
+                FROM team10_flowers
                 ORDER BY id;
-            """
-            cur.execute(sql)
+            """)
             rows = cur.fetchall()
             return [
                 {
-                    "id": r[0], 
+                    "id": r[0],
                     "name": r[1],
-                    "last_watered": r[2],
+                    "last_watered": r[2].strftime("%Y-%m-%d"),
                     "water_level": r[3],
                     "min_water_required": r[4],
+                    "needs_watering": r[3] < r[4]
                 }
                 for r in rows
             ]
         else:
-            sql = f"""
-                SELECT *
-                FROM team11_flowers
-                WHERE id = {id};
-            """
-            cur.execute(sql)
+            cur.execute("""
+                SELECT id, name, last_watered, water_level, min_water_required
+                FROM team10_flowers
+                WHERE id = %s;
+            """, (id,))
             row = cur.fetchone()
             if not row:
                 return None
             return {
                 "id": row[0],
                 "name": row[1],
-                "last_watered": row[2],
+                "last_watered": row[2].strftime("%Y-%m-%d"),
                 "water_level": row[3],
                 "min_water_required": row[4],
+                "needs_watering": row[3] < row[4]
             }
     finally:
         cur.close()
         conn.close()
 
 
-def update_flower(id, name, last_watered, water_level, min_water_required):
+def update_flower(id, last_watered, water_level):
     conn = _get_conn()
     cur = conn.cursor()
     try:
-        sql = f"""
-            UPDATE team11_flowers
-            SET name = '{name}',
-                last_watered = '{last_watered}',
-                water_level = {water_level},
-                min_water_required = {min_water_required}
-            WHERE id = {id};
-        """
-        cur.execute(sql)
+        cur.execute("""
+            UPDATE team10_flowers
+            SET last_watered = %s, water_level = %s
+            WHERE id = %s;
+        """, (last_watered, water_level, id))
         conn.commit()
         return True
     except Exception as e:
@@ -104,37 +97,12 @@ def delete_flower(id):
     conn = _get_conn()
     cur = conn.cursor()
     try:
-        sql = f"""
-            DELETE FROM team11_flowers
-            WHERE id = {id};
-        """
-        cur.execute(sql)
+        cur.execute("DELETE FROM team10_flowers WHERE id = %s;", (id,))
         conn.commit()
         return True
     except Exception as e:
         conn.rollback()
         print("Delete error:", e)
-        return False
-    finally:
-        cur.close()
-        conn.close()
-
-def water_flower(id):
-    conn = _get_conn()
-    cur = conn.cursor()
-    try:
-        sql = f"""
-            UPDATE team11_flowers
-            SET water_level = min_water_required,
-                last_watered = CURRENT_DATE
-            WHERE id = {id};
-        """
-        cur.execute(sql)
-        conn.commit()
-        return True
-    except Exception as e:
-        conn.rollback()
-        print("Watering error:", e)
         return False
     finally:
         cur.close()
