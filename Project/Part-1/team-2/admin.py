@@ -13,17 +13,21 @@ def init_db():
     conn = _get_conn()
     cur = conn.cursor()
     try:
+        # Drop and recreate to ensure correct schema
+        cur.execute("DROP TABLE IF EXISTS team2_flowers;")
         cur.execute("""
-            CREATE TABLE IF NOT EXISTS team2_flowers (
+            CREATE TABLE team2_flowers (
                 id SERIAL PRIMARY KEY,
                 name VARCHAR(100) NOT NULL,
-                color VARCHAR(50) NOT NULL,
-                price NUMERIC(10, 2) NOT NULL,
+                color VARCHAR(50) NOT NULL DEFAULT 'Mixed',
+                price NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
                 last_watered DATE NOT NULL,
                 water_level INT NOT NULL,
                 min_water_required INT NOT NULL
             );
         """)
+        # Patch existing tables that are missing the color column
+        
         conn.commit()
         print("Database initialized successfully with team2_flowers table.")
     except Exception as e:

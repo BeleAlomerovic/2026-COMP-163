@@ -17,7 +17,7 @@ def insert_flower(name, color, price):
     cur = conn.cursor()
     try:
         sql = f"""
-            INSERT INTO Flower (name, color, price)
+            INSERT INTO team2_flowers  (name, color, price)
             VALUES ('{name}', '{color}', {price});
         """
         cur.execute(sql)
@@ -37,58 +37,39 @@ def select_flower(flower_id=None):
     cur = conn.cursor()
     try:
         if flower_id is None:
-            sql = """
-                SELECT flower_id, name, color, price
-                FROM Flower
-                ORDER BY flower_id;
-            """
-            cur.execute(sql)
+            cur.execute("""
+                SELECT id, name, color, price
+                FROM team2_flowers
+                ORDER BY id;
+            """)
             rows = cur.fetchall()
             return [
-                {
-                    "flower_id": r[0],
-                    "name": r[1],
-                    "color": r[2],
-                    "price": r[3],
-                }
+                {"flower_id": r[0], "name": r[1], "color": r[2], "price": r[3]}
                 for r in rows
             ]
         else:
-            sql = f"""
-                SELECT flower_id, name, color, price
-                FROM Flower
-                WHERE flower_id = {flower_id};
-            """
-            cur.execute(sql)
+            cur.execute("""
+                SELECT id, name, color, price
+                FROM team2_flowers
+                WHERE id = %s;
+            """, (flower_id,))
             row = cur.fetchone()
             if not row:
                 return None
-            return {
-                "flower_id": row[0],
-                "name": row[1],
-                "color": row[2],
-                "price": row[3],
-            }
+            return {"flower_id": row[0], "name": row[1], "color": row[2], "price": row[3]}
     finally:
         cur.close()
         conn.close()
 
-
-def update_flower(flower_id, name, color, price, last_watered, water_level, min_water_required):
+def update_flower(flower_id, name, color, price):
     conn = _get_conn()
     cur = conn.cursor()
     try:
-        sql = f"""
-            UPDATE Flower
-            SET name = '{name}',
-                color = '{color}',
-                price = {price},
-                last_watered = '{last_watered}',
-                water_level = {water_level},
-                min_water_required = {min_water_required}
-            WHERE flower_id = {flower_id};
-        """
-        cur.execute(sql)
+        cur.execute("""
+            UPDATE team2_flowers
+            SET name = %s, color = %s, price = %s
+            WHERE id = %s;
+        """, (name, color, price, flower_id))
         conn.commit()
         return True
     except Exception as e:
@@ -105,8 +86,8 @@ def delete_flower(flower_id):
     cur = conn.cursor()
     try:
         sql = f"""
-            DELETE FROM Flower
-            WHERE flower_id = {flower_id};
+            DELETE FROM team2_flowers 
+            WHERE id = {flower_id};
         """
         cur.execute(sql)
         conn.commit()
