@@ -1,7 +1,7 @@
 import psycopg2
-import backend
-from flask import Flask, request, jsonify
-from flask import redirect, url_for, flash
+from flask import Flask, request, jsonify, redirect, url_for, flash, render_template
+from apscheduler.schedulers.background import BackgroundScheduler
+import admin
 #NEW: added water() function
 #NEW: added DATABASE_URL and get_db_connection()
 #NEW: import flask.redict and flask.url_for because it is used for water()
@@ -15,14 +15,16 @@ DATABASE_URL = (
 def get_db_connection():
     return psycopg2.connect(DATABASE_URL)
 
-app = Flask(__name__, template_folder='template')
+def create_app():
+    app = Flask(__name__, template_folder='template')
+    admin.init_db()
+    admin.seed_data()
+    return app
+
+app = create_app()
 app.json.sort_keys = False #Done so JSONs of SQL Queries are in original order (not auto ordered alphanumerically)
 app.secret_key = "team8_secret_key"
-# #Starting page 
-# @app.route('/')
-# def test_home():
-#     return "Flower Watering App"
-from flask import render_template
+
 #Starting page 
 @app.route('/')
 def index():
@@ -50,7 +52,8 @@ def get_columns():
 def get_flowers():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT flower_id, name, last_watered, water_level, min_water_required FROM team8_flowers") #FIXED: Changed `id` --> `flower_id`
+    cur.execute("SELECT flower_id, name, last_watered, GREATEST(water_level - (5 * (CURRENT_DATE - last_watered)),0) AS water_level, min_water_required FROM team8_flowers;") #FIXED: Changed `id` --> `flower_id`"
+    
     flowers = cur.fetchall()
     cur.close()
     conn.close()
@@ -77,7 +80,7 @@ def get_flowers_needing_water():
     } for f in flowers])
     
 
-# Add a flower -- WORKING -----------------------
+# Add a flower
 @app.route('/team8_flowers/add', methods=['POST'])
 def add_flower():
     data = request.form
@@ -91,7 +94,7 @@ def add_flower():
     flash("Flower added successfully!")
     return redirect(url_for('index'))
 
-# Update a flower by ID -- NOT WORKING-------------
+# Update a flower by ID 
 #I think this should also be part of the frontend buttons or inputs? Let someone edit a flower based on a flower_id ???
 @app.route('/team8_flowers/update/<int:id>', methods=['POST'])
 def update_flower(id):
@@ -107,7 +110,7 @@ def update_flower(id):
     flash("Flower updated successfully!")
     return redirect(url_for('index'))
 
-# Delete a flower by ID -- NOT WORKING ------------
+# Delete a flower by ID 
 @app.route('/team8_flowers/delete/<int:id>', methods=['POST'])
 def delete_flower(id):
     conn = get_db_connection()
@@ -119,16 +122,19 @@ def delete_flower(id):
     flash("Flower deleted successfully!")
     return redirect(url_for('index'))
 
-#NEW: Water  NOT TESTED ------------
+#NEW: Water
 @app.route("/team8_flowers/water/<int:id>", methods=["POST"]) 
 def water(id):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("""
         UPDATE team8_flowers
-        SET water_level = water_level + 10,
+        SET water_level = GREATEST(
+                water_level - (5 * (CURRENT_DATE - last_watered)),
+                0
+            ) + 10,
             last_watered = CURRENT_DATE
-        WHERE flower_id = %s;
+        WHERE flower_id = %s
     """, (id,))
     conn.commit()
     cur.close()
@@ -137,4 +143,4 @@ def water(id):
     return redirect(url_for('index'))
 
 if __name__ == "__main__":
-    app.run(debug=True, port=3000, host="0.0.0.0")
+    app.run(debug=True, use_reloader=False, port=3000, host="0.0.0.0")
